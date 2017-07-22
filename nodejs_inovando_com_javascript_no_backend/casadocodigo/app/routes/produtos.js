@@ -24,12 +24,26 @@ module.exports = (app) => {
   app.get('/produtos', listarProdutos);
 
   app.get('/produtos/form',function(resquest,response){
-    response.render('produtos/form');
+    response.render('produtos/form',{errosValidacao:{},produto:{}});
   });
 
   app.post('/produtos',function(request,response){
     var livro = request.body;
-    console.log(livro);
+    request.assert('titulo',"Titulo é obrigatório").notEmpty();
+    request.assert('preco',"Formato inválido").isFloat();
+
+    var erros = request.validationErrors();
+    if (erros){
+      response.format({
+        html: ()=>{
+              response.status(400).render('produtos/form',{errosValidacao:erros,produto: livro});
+        },
+        json: ()=>{
+          response.status(400).json(erros);
+        }
+      });
+      return;
+    }
     var connection = app.infra.connectionFactory();
     var produtoDAO = new app.infra.ProdutoDAO(connection);
     produtoDAO.salva(livro,function(erros,resultados){
