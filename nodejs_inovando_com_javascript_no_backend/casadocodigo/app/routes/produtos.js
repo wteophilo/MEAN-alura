@@ -1,24 +1,26 @@
-module.exports = (app) => {
+  module.exports = (app) => {
 
-  var listarProdutos = function(request,response){
-    console.log('listando...');
-    var connection = app.infra.connectionFactory();
-    var produtosBanco = new app.infra.ProdutoDAO(connection);
+    var listarProdutos = function(request,response,next){
+      console.log('listando...');
+      var connection = app.infra.connectionFactory();
+      var produtosBanco = new app.infra.ProdutoDAO(connection);
 
-    produtosBanco.lista(function(err, resultados){
-        console.log(err);
-        response.format({
-          html: ()=>{
-            response.render('produtos/lista', {lista: resultados});
-          },
-          json: ()=>{
-            response.json(resultados);
+      produtosBanco.lista(function(err, resultados){
+          if (err){
+            return next(err);
           }
-        });
-     });
+          response.format({
+            html: ()=>{
+              response.render('produtos/lista', {lista: resultados});
+            },
+            json: ()=>{
+              response.json(resultados);
+            }
+          });
+       });
 
-    connection.end();
-  }
+      connection.end();
+    }
 
 
   app.get('/produtos', listarProdutos);
